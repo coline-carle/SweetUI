@@ -1,0 +1,9 @@
+## Interface: 70300
+## Title: Sweet UI
+## Author: Sweetlie
+## Version: 1.0.0
+## Notes: my interface
+## RequiredDeps: oUF, Ace3
+
+
+core.lua
