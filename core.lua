@@ -13,39 +13,9 @@ Loader:SetScript("OnEvent", function(self, event, ...)
 	return self[event] and self[event](self, event, ...)
 end)
 
-ns.config = {
-  width = 225,
-  height = 30,
-  powerHeight = 0.2,
-
-  font = "vixar",
-  fontScale = 1,
-  fontShadow = true,
-  fontOutline = "OUTLINE",
-
-  backdropColor = { 32/256, 35/256, 32/256, 1},
-  borderColor = { 0.5, 0.5, 0.5 },
-}
-
-
--- unit uconfig
-ns.uconfig = {
-	player = {
-		point = "BOTTOMRIGHT UIParent CENTER -200 -200",
-		width = 1.3,
-		power = true,
-    healthbar = {
-      texture = "Status Bar 03",
-      bg = "Status Bar 04",
-    }
-
-	},
-}
-
 
 
 function Loader:ADDON_LOADED(event, addon)
-  print("ADDON LOADED")
   ns.frames  = {}
   ns.statusbars = {}
   ns.fontstrings = {}
@@ -54,6 +24,12 @@ function Loader:ADDON_LOADED(event, addon)
   Media:Register("font", "vixar", [[Interface\AddOns\SweetUI\Media\Fonts\vixar.ttf]])
   Media:Register("statusbar", "Status Bar 03", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 03 Croped]])
   Media:Register("statusbar", "Status Bar 04", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 04 Croped]])
+  Media:Register("statusbar", "Status Bar 05", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 05]])
+  Media:Register("texture", "Circle Frame 04", [[Interface\AddOns\SweetUI\Media\BG\Circle Frame 04]])
+  Media:Register("texture", "Circle Rim", [[Interface\AddOns\SweetUI\Media\Other\Circle Rim]])
+
+  Media:Register("texture", "Unit Frame 13 Left", [[Interface\AddOns\SweetUI\Media\BG\Unit Frame 13 Left]])
+  Media:Register("texture", "Unit Frame 13 Right", [[Interface\AddOns\SweetUI\Media\BG\Unit Frame 13 Right]])
 
 
   -- cleanup
@@ -62,6 +38,59 @@ function Loader:ADDON_LOADED(event, addon)
 
   -- Go
 	oUF:Factory(ns.Factory)
+end
+
+
+function ns.CreatePortrait(parent, pconfig)
+  local portrait = CreateFrame("PlayerModel", nil, parent)
+  local p1, parent, p2, x, y = string.split(" ", pconfig.point)
+  portrait:SetPoint(p1, parent, p2, tonumber(x) or 0, tonumber(y) or 0)
+  portrait:SetFrameStrata("BACKGROUND")
+  portrait:SetSize(pconfig.size, pconfig.size)
+
+  portrait.type = "3D"
+
+
+  local rimFrame = CreateFrame("Frame", nil, portrait)
+  rimFrame:SetPoint("CENTER")
+  rimFrame:SetFrameStrata("LOW")
+  rimFrame:SetSize(pconfig.backSize, pconfig.backSize)
+
+  local texture
+  local r, g, b, a
+
+  local insideRimInset = pconfig.textures.insideRimInset
+
+
+  local rimBackground = rimFrame:CreateTexture(nil, "BACKGROUND")
+  texture = Media:Fetch("texture", pconfig.textures.rimBackground)
+  rimBackground:SetTexture(texture)
+  rimBackground:SetAllPoints(rimFrame)
+  r, g, b, a = strsplit(", ", pconfig.textures.rimBackgroundColor)
+  rimBackground:SetVertexColor(tonumber(r), tonumber(g), tonumber(b), tonumber(a))
+  rimBackground:SetTexCoord(insideRimInset, 1 - insideRimInset,
+                            insideRimInset, 1 - insideRimInset)
+
+  local rim = rimFrame:CreateTexture(nil, "BORDER")
+  texture = Media:Fetch("texture", pconfig.textures.rim)
+  rim:SetTexture(texture)
+  rim:SetAllPoints(rimFrame)
+  r, g, b, a = strsplit(", ", pconfig.textures.rimColor)
+  rim:SetVertexColor(tonumber(r), tonumber(g), tonumber(b), tonumber(a))
+  rim:SetTexCoord(insideRimInset, 1 - insideRimInset,
+                  insideRimInset, 1 - insideRimInset)
+
+
+  local outerRim = rimFrame:CreateTexture(nil, "BORDER")
+  texture = Media:Fetch("texture", pconfig.textures.outterRim)
+  outerRim:SetTexture(texture)
+  outerRim:SetAllPoints(rimFrame)
+  outerRim:SetBlendMode("ADD")
+  r, g, b, a = strsplit(", ", pconfig.textures.outerRimColor)
+  outerRim:SetVertexColor(tonumber(r), tonumber(g), tonumber(b), tonumber(a))
+  outerRim:SetTexCoord(0, 1, 0, 1)
+
+  return portrait
 end
 
 
@@ -90,7 +119,6 @@ function ns.CreateStatusBar(parent, size, justify, bar)
   local file
   if bar and bar.texture then
     file = Media:Fetch("statusbar", bar.texture)
-    print(file)
   else
     file = "Interface\\TargetingFrame\\UI-StatusBar"
   end

@@ -6,5 +6,6 @@
 ## RequiredDeps: oUF
 
 embeds.xml
+config.lua
 core.lua
 frames.lua
