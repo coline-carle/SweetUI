@@ -3,6 +3,9 @@ local _, ns = ...
 
 --get oUF namespace (just in case needed)
 local oUF = ns.oUF or oUF
+local Media
+
+local FALLBACK_FONT_SIZE = 16
 
 local Loader = CreateFrame("Frame")
 Loader:RegisterEvent("ADDON_LOADED")
@@ -10,19 +13,48 @@ Loader:SetScript("OnEvent", function(self, event, ...)
 	return self[event] and self[event](self, event, ...)
 end)
 
+ns.config = {
+  width = 225,
+  height = 30,
+  powerHeight = 0.2,
+
+  font = "vixar",
+  fontScale = 1,
+  fontShadow = true,
+  fontOutline = "OUTLINE",
+
+  backdropColor = { 32/256, 35/256, 32/256, 1},
+  borderColor = { 0.5, 0.5, 0.5 },
+}
+
+
 -- unit uconfig
 ns.uconfig = {
 	player = {
 		point = "BOTTOMRIGHT UIParent CENTER -200 -200",
 		width = 1.3,
 		power = true,
-		castbar = true,
+    healthbar = {
+      texture = "Status Bar 03",
+      bg = "Status Bar 04",
+    }
+
 	},
 }
+
+
 
 function Loader:ADDON_LOADED(event, addon)
   print("ADDON LOADED")
   ns.frames  = {}
+  ns.statusbars = {}
+  ns.fontstrings = {}
+
+  Media  = LibStub("LibSharedMedia-3.0")
+  Media:Register("font", "vixar", [[Interface\AddOns\SweetUI\Media\Fonts\vixar.ttf]])
+  Media:Register("statusbar", "Status Bar 03", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 03 Croped]])
+  Media:Register("statusbar", "Status Bar 04", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 04 Croped]])
+
 
   -- cleanup
   self:UnregisterEvent(event)
@@ -33,82 +65,59 @@ function Loader:ADDON_LOADED(event, addon)
 end
 
 
-local function Spawn(self, unit, isSingle)
-  if self:GetParent():GetAttribute("useOwnerUnit") then
-		local suffix = self:GetParent():GetAttribute("unitsuffix")
-		self:SetAttribute("useOwnerUnit", true)
-		self:SetAttribute("unitsuffix", suffix)
-		unit = unit .. suffix
-	end
 
-  local uconfig = ns.uconfig[unit]
-  self.spawnunit = unit
+function ns.CreateFontString(parent, size, justify)
+	local file = ns.GetFontFile()
+	if not size or size < 6 then size = FALLBACK_FONT_SIZE end
+	size = size * ns.config.fontScale
 
-  local portraitSize =  64
-  local backSize = portraitSize + 31
-  local anchor = 400
-  local insideCircle = 0.21
+	local fs = parent:CreateFontString(nil, "OVERLAY")
+	fs:SetFont(file, size, ns.config.fontOutline)
+	fs:SetJustifyH(justify or "LEFT")
+	fs:SetShadowOffset(ns.config.fontShadow and 1 or 0, ns.config.fontShadow and -1 or 0)
+	fs:SetWordWrap(false)
+	fs.baseSize = size
 
-  if unit=="player" then
-
-
-
-    local portrait = CreateFrame("PlayerModel", nil, self)
-    portrait:SetPoint("TOP", "UIParent", "BOTTOM", 0, anchor)
-    portrait:SetFrameStrata("BACKGROUND")
-    portrait:SetSize(portraitSize, portraitSize)
-
-    portrait.type = "3D"
-    self.Portrait = portrait
-
-    local borderFrame = CreateFrame("Frame", nil, portrait)
-    borderFrame:SetPoint("CENTER")
-    borderFrame:SetFrameStrata("LOW")
-    borderFrame:SetSize(backSize, backSize)
-
-
-    local rimBackground = borderFrame:CreateTexture(nil, "BACKGROUND")
-    rimBackground:SetTexture([[Interface\AddOns\SweetUI\Media\BG\Circle Frame 04]])
-    rimBackground:SetAllPoints(borderFrame)
-    rimBackground:SetVertexColor(0.4, 0.4, 0.4, 1.0)
-    rimBackground:SetTexCoord(insideCircle, 1 - insideCircle, insideCircle, 1 - insideCircle)
-
-    local rim = borderFrame:CreateTexture(nil, "BORDER")
-    rim:SetTexture([[Interface\AddOns\SweetUI\Media\BG\Circle Frame 04]])
-    rim:SetAllPoints(borderFrame)
-    rim:SetVertexColor(0.67, 0.91, 1.0, 1.0)
-    rim:SetTexCoord(insideCircle, 1 - insideCircle, insideCircle, 1 - insideCircle)
-
-
-    local outerRim = borderFrame:CreateTexture(nil, "BORDER")
-    outerRim:SetTexture([[Interface\AddOns\SweetUI\Media\Other\Circle Rim]])
-    outerRim:SetAllPoints(borderFrame)
-    outerRim:SetBlendMode("ADD")
-    outerRim:SetVertexColor(0.5, 1.0, 0.96, 0.8)
-    outerRim:SetTexCoord(0, 1, 0, 1)
-
-
-    --
-
-    -- border:SetVertexColor(0.07, 0.33, 0.08, 0.5)
-
-  end
-
+	tinsert(ns.fontstrings, fs)
+	return fs
 end
 
-function ns.Factory(oUF)
-  -- register style
-  oUF:RegisterStyle("SweetUI", Spawn)
-  oUF:SetActiveStyle("SweetUI")
+function ns.GetFontFile()
+  return Media:Fetch("font", ns.config.font) or STANDARD_TEXT_FONT
+end
 
-  local uconfig = ns.uconfig
-  for unit, udata in pairs(uconfig) do
-    if not udata.disable then
-      local name = "oUFSweet" .. unit:gsub("%a", strupper, 1):gsub("target", "Target"):gsub("pet", "Pet")
-      if udata.point then
-        print("generating frame for", unit)
-				ns.frames[unit] = oUF:Spawn(unit, name)
-      end
-    end
+function ns.CreateStatusBar(parent, size, justify, bar)
+  local file
+  if bar and bar.texture then
+    file = Media:Fetch("statusbar", bar.texture)
+    print(file)
+  else
+    file = "Interface\\TargetingFrame\\UI-StatusBar"
   end
+
+
+  local sb = CreateFrame("StatusBar", "oUFSweetUIStatusBar"..(1 + #ns.statusbars), parent)
+  sb:SetStatusBarTexture(file)
+  tinsert(ns.statusbars, sb)
+
+
+
+  if bar and bar.bg then
+    local bgFile = Media:Fetch("statusbar", bar.bg)
+    sb.bg = sb:CreateTexture(nil, "BACKGROUND")
+    sb.bg:SetTexture(bgFile)
+    sb.bg:SetAllPoints(true)
+    tinsert(ns.statusbars, sb.bg)
+  end
+
+  if size then
+			sb.value = ns.CreateFontString(sb, size, justify)
+	end
+
+  sb.texture = sb:GetStatusBarTexture()
+	sb.texture:SetDrawLayer("BORDER")
+	sb.texture:SetHorizTile(false)
+	sb.texture:SetVertTile(false)
+
+  return sb
 end
