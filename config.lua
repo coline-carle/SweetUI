@@ -17,9 +17,21 @@ ns.config = {
     height = 0.24,
   },
 
-  background = {
-    left = "Unit Frame 13 Left",
-    right ="Unit Frame 13 Right",
+  art = {
+    left = {
+      texture = "Unit Frame 13 Left",
+      x = 52,
+      y = 0,
+      anchor = "CENTER LEFT",
+      size = 140,
+    },
+    right = {
+      texture ="Unit Frame 13 Right",
+      x = -36,
+      y = 0,
+      anchor = "CENTER RIGHT",
+      size = 128,
+    }
   },
 
   font = "vixar",
@@ -34,6 +46,11 @@ ns.config = {
 
 -- unit uconfig
 ns.uconfig = {
+  target = {
+		point = "BOTTOMLEFT UIParent CENTER 200 -200",
+		width = 1.3,
+		detailed = true,
+  },
 	player = {
 		point = "BOTTOMRIGHT UIParent CENTER -200 -200",
 		width = 1.3,
@@ -41,7 +58,7 @@ ns.uconfig = {
     portrait = {
       size = 64,
       backSize = 91,
-      point = "BOTTOM UIParent BOTTOM 0 400",
+      point = "BOTTOM UIParent CENTER 0 -200",
       textures = {
         rimBackground = "Circle Frame 04",
         rimBackgroundColor = "0.4 0.4 0.4 1.0",

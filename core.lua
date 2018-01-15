@@ -40,6 +40,23 @@ function Loader:ADDON_LOADED(event, addon)
 	oUF:Factory(ns.Factory)
 end
 
+function ns.CreateArt(parent, config)
+
+
+
+    local artFrame = CreateFrame("Frame", nil, parent)
+    local p1, p2 = strsplit(" ", config.anchor)
+    artFrame:SetPoint(p1, parent, p2, config.x, config.y)
+    artFrame:SetSize(config.size, config.size)
+
+    local texture = artFrame:CreateTexture(nil, "BACKGROUND")
+    local texname =  Media:Fetch("texture", config.texture)
+    texture:SetTexture(texname)
+    texture:SetAllPoints(artFrame)
+
+    return artFrame
+  end
+
 
 function ns.CreatePortrait(parent, pconfig)
   local portrait = CreateFrame("PlayerModel", nil, parent)

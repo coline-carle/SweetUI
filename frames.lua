@@ -16,7 +16,7 @@ local function Spawn(self, unit, isSingle)
 
   local uconfig = ns.uconfig[unit]
   self.spawnunit = unit
-  
+
   local FRAME_WIDTH  = config.width  * (uconfig.width  or 1)
   local FRAME_HEIGHT = config.height * (uconfig.height or 1)
   local POWER_HEIGHT = FRAME_HEIGHT * config.powerHeight
@@ -61,7 +61,15 @@ local function Spawn(self, unit, isSingle)
 
     -- health:SetPoint("BOTTOM", power, "TOP", 0, 1)
 
+    self.leftArt = ns.CreateArt(self, config.art.left)
+    self.rightArt = ns.CreateArt(self, config.art.right)
+
     self.Power = power
+
+
+
+    -- decorations
+
   end
 
 
