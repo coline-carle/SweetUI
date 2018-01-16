@@ -7,5 +7,6 @@
 
 embeds.xml
 config.lua
+functions.lua
 core.lua
 frames.lua

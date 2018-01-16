@@ -5,6 +5,8 @@ ns.objects,  ns.frames = {}, {}
 
 local config
 
+local colors = oUF.colors
+
 
 local function Spawn(self, unit, isSingle)
   if self:GetParent():GetAttribute("useOwnerUnit") then
@@ -42,7 +44,7 @@ local function Spawn(self, unit, isSingle)
 	-- Health bar and text --
 	-------------------------
   if uconfig.detailed then
-  	local health = ns.CreateStatusBar(self, 24, "RIGHT", config.health)
+  	local health = ns.CreateStatusBar(self, 24, "RIGHT", config.health, uconfig.mirror)
   	health:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
   	health:SetPoint("TOPRIGHT", self, "TOPRIGHT", -1, -1)
   	health:SetPoint("BOTTOM", self, "BOTTOM", 0, 1)
@@ -54,15 +56,56 @@ local function Spawn(self, unit, isSingle)
   	health.value:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -2, - 4)
     self.Health = health
 
-    local power = ns.CreateStatusBar(self, uconfig.width, "LEFT", config.power)
-    power:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 25, 0)
-    power:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -48, 0)
+    local power = ns.CreateStatusBar(self, uconfig.width, "LEFT", config.power, uconfig.mirror)
+    local left, right = config.power.left, config.power.right
+    if uconfig.mirror then
+      left, right = -right, -left
+    end
+    power:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", left, 0)
+    power:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", right, 0)
     power:SetHeight(POWER_HEIGHT)
+
+    power.bg.multiplier = config.power.multiplier
+    local powerColorMode = uconfig.powerColorMode
+    power.colorClass = powerColorMode == "CLASS"
+    power.colorPower = powerColorMode == "POWER"
 
     -- health:SetPoint("BOTTOM", power, "TOP", 0, 1)
 
-    self.leftArt = ns.CreateArt(self, config.art.left)
-    self.rightArt = ns.CreateArt(self, config.art.right)
+    if uconfig.mirror then
+      self.leftArt = ns.CreateArt(self, config.mirrorArt.left, uconfig.mirror)
+      self.rightArt = ns.CreateArt(self, config.mirrorArt.right, uconfig.mirror)
+    else
+      self.leftArt = ns.CreateArt(self, config.art.left)
+      self.rightArt = ns.CreateArt(self, config.art.right)
+    end
+
+
+
+    if unit == "target" then
+
+
+
+      local PvPFrame = CreateFrame("Frame", nil, self)
+
+      PvPFrame:SetSize(config.blazon.size, config.blazon.size)
+      local p1, p2 = strsplit(" ", config.blazon.anchor)
+      PvPFrame:SetPoint(p1, self, p2, config.blazon.x, config.blazon.y)
+
+      local PvPIndicator = PvPFrame:CreateTexture(nil, "OVERLAY")
+      PvPIndicator.file = {}
+      PvPIndicator.file["Alliance"] = LibStub("LibSharedMedia-3.0"):Fetch("texture", config.blazon.Alliance)
+      PvPIndicator.file["Horde"] = LibStub("LibSharedMedia-3.0"):Fetch("texture", config.blazonHorde)
+
+      PvPIndicator:SetAllPoints(PvPFrame)
+      PvPIndicator.PostUpdate = ns.PvP_PostUpdate
+
+      self.PvP = PvPFrame
+      self.PvPIndicator = PvPIndicator
+    end
+
+
+
 
     self.Power = power
 
@@ -71,6 +114,7 @@ local function Spawn(self, unit, isSingle)
     -- decorations
 
   end
+
 
 
   if unit=="player" then

@@ -23,13 +23,18 @@ function Loader:ADDON_LOADED(event, addon)
   Media  = LibStub("LibSharedMedia-3.0")
   Media:Register("font", "vixar", [[Interface\AddOns\SweetUI\Media\Fonts\vixar.ttf]])
   Media:Register("statusbar", "Status Bar 03", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 03 Croped]])
+  Media:Register("statusbar", "Status Bar 03 Mirror", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 03 Croped Mirror]])
   Media:Register("statusbar", "Status Bar 04", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 04 Croped]])
   Media:Register("statusbar", "Status Bar 05", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 05]])
+  Media:Register("statusbar", "Status Bar 05 Mirror", [[Interface\AddOns\SweetUI\Media\Bar\Status Bar 05 Mirror]])
   Media:Register("texture", "Circle Frame 04", [[Interface\AddOns\SweetUI\Media\BG\Circle Frame 04]])
   Media:Register("texture", "Circle Rim", [[Interface\AddOns\SweetUI\Media\Other\Circle Rim]])
 
   Media:Register("texture", "Unit Frame 13 Left", [[Interface\AddOns\SweetUI\Media\BG\Unit Frame 13 Left]])
   Media:Register("texture", "Unit Frame 13 Right", [[Interface\AddOns\SweetUI\Media\BG\Unit Frame 13 Right]])
+
+  Media:Register("texture", "Alliance Icon", [[Interface\AddOns\SweetUI\Media\Icon\Alliance Icon]])
+  Media:Register("texture", "Horde Icon", [[Interface\AddOns\SweetUI\Media\Icon\Horde Icon]])
 
 
   -- cleanup
@@ -40,7 +45,7 @@ function Loader:ADDON_LOADED(event, addon)
 	oUF:Factory(ns.Factory)
 end
 
-function ns.CreateArt(parent, config)
+function ns.CreateArt(parent, config, mirror)
 
 
 
@@ -53,6 +58,9 @@ function ns.CreateArt(parent, config)
     local texname =  Media:Fetch("texture", config.texture)
     texture:SetTexture(texname)
     texture:SetAllPoints(artFrame)
+    if mirror then
+      texture:SetTexCoord(1, 0, 0, 1)
+    end
 
     return artFrame
   end
@@ -132,10 +140,14 @@ function ns.GetFontFile()
   return Media:Fetch("font", ns.config.font) or STANDARD_TEXT_FONT
 end
 
-function ns.CreateStatusBar(parent, size, justify, bar)
+function ns.CreateStatusBar(parent, size, justify, bar, mirror)
   local file
   if bar and bar.texture then
-    file = Media:Fetch("statusbar", bar.texture)
+    if mirror then
+      file = Media:Fetch("statusbar", bar.mirror)
+    else
+      file = Media:Fetch("statusbar", bar.texture)
+    end
   else
     file = "Interface\\TargetingFrame\\UI-StatusBar"
   end
@@ -147,11 +159,20 @@ function ns.CreateStatusBar(parent, size, justify, bar)
 
 
 
-  if bar and bar.bg then
-    local bgFile = Media:Fetch("statusbar", bar.bg)
+
+  if not bar.noBG then
+    local bgFile
+    if bar.bg then
+      bgFile = Media:Fetch("statusbar", bar.bg)
+    else
+      bgFile = bar.bg or file
+    end
     sb.bg = sb:CreateTexture(nil, "BACKGROUND")
     sb.bg:SetTexture(bgFile)
     sb.bg:SetAllPoints(true)
+    if mirror then
+      sb.bg:SetTexCoord(1, 0, 0, 1)
+    end
     tinsert(ns.statusbars, sb.bg)
   end
 
@@ -163,6 +184,11 @@ function ns.CreateStatusBar(parent, size, justify, bar)
 	sb.texture:SetDrawLayer("BORDER")
 	sb.texture:SetHorizTile(false)
 	sb.texture:SetVertTile(false)
+
+  if mirror then
+    sb.texture:SetTexCoord(1, 0, 0, 1)
+  end
+
 
   return sb
 end
