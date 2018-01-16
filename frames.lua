@@ -102,6 +102,12 @@ local function Spawn(self, unit, isSingle)
 
       self.PvP = PvPFrame
       self.PvPIndicator = PvPIndicator
+
+
+      self.Name = ns.CreateFontString(self.overlay, 16, "LEFT")
+      self.Name:SetPoint("BOTTOMRIGHT", self.Health, "TOPRIGHT", 0, 0)
+      self.Name:SetPoint("BOTTOMLEFT", self.Health, "TOPLEFT", 0, 0)
+      self:Tag(self.Name, "[name]")
     end
 
 
